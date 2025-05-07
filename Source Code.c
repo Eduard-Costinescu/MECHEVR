@@ -53,7 +53,7 @@ void steeringratio(double srd,double uvol,int rbrat,int z,float p,FILE *f){
 
 			sreal = uvol/(2.0*uroata);
 			if((sreal-srd <1) && (sreal-srd >-1)){
-				printf("Steering ratio ul este %.2lf\n",sreal);
+				//				printf("Steering ratio ul este %.2lf\n",sreal);
 				fprintf(f,"%.2lf %d %.2f %d %.2lf",sreal,z,p,rbrat,uvol);
 				fprintf(f,"\n");
 			}}
@@ -124,6 +124,21 @@ void sortaredescrescatoare(struct rezultate r[],int n1,FILE *f){
 
 }
 
+void filtrareint(struct rezultate r[],int n,float min,float max){
+	int i;
+	int nr = 0;
+
+	for(i = 0;i<n;i++){
+		if(r[i].sreal>min && r[i].sreal <max){
+			printf("Steering ratio ul obtinut in urma filtrarii este : %.2lf\n",r[i].sreal);
+			nr++;
+		}
+	}
+	if(nr == 0)
+		printf("Nu s au gasit steering ratio urile dorite in intervalul introdus!");
+
+}
+
 int main(){
 	struct sdi *s;
 	struct rezultate *r;
@@ -131,6 +146,8 @@ int main(){
 	int n;
 	int n1;
 	int rasp;
+	float min = 5;
+	float max = 6;
 	FILE *fi;
 	FILE *fo;
 	FILE *f1;
@@ -141,9 +158,10 @@ int main(){
 
 
 
-	if(!fi)
+	if(!fi){
 		printf("Eroare la deschidere fisier!");
-
+		return 0;
+	}
 	n = numarare(fi);
 	fseek(fi, 0, SEEK_SET);
 	s = malloc(n*(sizeof(struct sdi)));
@@ -154,21 +172,26 @@ int main(){
 		steeringratio(s[i].srd, s[i].uvol,s[i].rbrat,s[i].z,s[i].p,fo);
 	fclose(fo);
 	f1 = fopen("output.csv","r");
-
+	if(!f1){
+		printf("Eroare la deschidere fisier!");
+		return 0;
+	}
 	n1 = numarare(f1);
 	fseek(f1, 0, SEEK_SET);
 	r = malloc(n1*(sizeof(struct rezultate)));
 	citirez(r,n1,f1);
 
-	printf("Introduceti 1 pentru sortarea crescatoare 2 pt descrescatoare");
+	printf("Introduceti 1 pentru sortarea crescatoare 2 pt descrescatoare:");
 	fflush(stdout);
 	scanf("%d",&rasp);
 	if(rasp == 1){
 		f2 = fopen("output.csv","w");
 		sortarecrescatoare(r,n1,f2);}
 	if(rasp == 2){
-			f2 = fopen("output.csv","w");
-			sortaredescrescatoare(r,n1,f2);}
+		f2 = fopen("output.csv","w");
+		sortaredescrescatoare(r,n1,f2);}
+
+	filtrareint(r,n1,min,max);
 
 
 	fclose(fi);
